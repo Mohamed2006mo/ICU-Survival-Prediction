@@ -82,7 +82,3 @@ At the chosen threshold (0.40), the deployed model catches 84% of actual deaths 
 ## 🛠️ Tech Stack
 
 Python · pandas · scikit-learn · XGBoost · Streamlit · Plotly
-
-## 👤 Author
-
-**Mohamed** — Data Science, Al-Shorouk Academy
