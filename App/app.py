@@ -12,7 +12,8 @@ st.set_page_config(
 )
 
 # ---------------------------------------------------------------------------
-# Theme — matches the project's presentation palette
+# Theme — forced light, explicit colors on every surface so the app looks
+# identical regardless of the visitor's system/browser Dark mode setting.
 # Navy #0B2545 · Teal #146C94 · Coral #E4572E · Mint #3AAFA9
 # ---------------------------------------------------------------------------
 st.markdown("""
@@ -24,18 +25,29 @@ st.markdown("""
     --mint: #3AAFA9;
     --ice: #E8F1F8;
     --slate: #45536B;
+    --page-bg: #F7F9FC;
+    --card-bg: #FFFFFF;
+    --border: #E2E8F0;
 }
 
-/* Page background */
-.stApp { background-color: #F7F9FC; }
+/* Force the whole app surface to light, in both themes */
+.stApp, [data-testid="stAppViewContainer"], [data-testid="stMain"] {
+    background-color: var(--page-bg) !important;
+}
+[data-testid="stHeader"] { background-color: transparent !important; }
+
+/* Body text stays dark navy regardless of theme */
+.stApp, .stApp p, .stApp span, .stApp li, .stApp label {
+    color: var(--navy) !important;
+}
 
 /* Headings */
-h1, h2, h3 { color: var(--navy) !important; font-weight: 700 !important; }
+h1, h2, h3, h4 { color: var(--navy) !important; font-weight: 700 !important; }
 h1 { border-bottom: 3px solid var(--coral); padding-bottom: 0.4rem; display: inline-block; }
 
-/* Sidebar */
-[data-testid="stSidebar"] {
-    background-color: var(--navy);
+/* Sidebar — always navy background, always light text, in both themes */
+[data-testid="stSidebar"], [data-testid="stSidebar"] > div {
+    background-color: var(--navy) !important;
 }
 [data-testid="stSidebar"] * { color: #E8F1F8 !important; }
 [data-testid="stSidebar"] h3 {
@@ -53,10 +65,10 @@ h1 { border-bottom: 3px solid var(--coral); padding-bottom: 0.4rem; display: inl
     border-radius: 6px;
 }
 
-/* Metric cards */
+/* Metric cards — always white with navy text, regardless of theme */
 div[data-testid="stMetric"] {
-    background-color: white;
-    border: 1px solid #E2E8F0;
+    background-color: var(--card-bg) !important;
+    border: 1px solid var(--border);
     border-left: 5px solid var(--teal);
     border-radius: 10px;
     padding: 1rem 1.2rem;
@@ -67,8 +79,8 @@ div[data-testid="stMetric"] [data-testid="stMetricValue"] { color: var(--navy) !
 
 /* Buttons */
 .stButton > button, .stFormSubmitButton > button {
-    background-color: var(--coral);
-    color: white;
+    background-color: var(--coral) !important;
+    color: white !important;
     border: none;
     border-radius: 8px;
     font-weight: 600;
@@ -76,14 +88,22 @@ div[data-testid="stMetric"] [data-testid="stMetricValue"] { color: var(--navy) !
     transition: background-color 0.15s ease;
 }
 .stButton > button:hover, .stFormSubmitButton > button:hover {
-    background-color: #C8441E;
-    color: white;
+    background-color: #C8441E !important;
+    color: white !important;
 }
 
-/* Containers / expanders as cards */
+/* Containers / expanders / bordered result cards — always white */
 div[data-testid="stExpander"], div[data-testid="stVerticalBlockBorderWrapper"] {
+    background-color: var(--card-bg) !important;
     border-radius: 10px !important;
-    border: 1px solid #E2E8F0 !important;
+    border: 1px solid var(--border) !important;
+}
+
+/* Text inputs / number inputs / selects — always light background */
+[data-testid="stNumberInput"] input, [data-testid="stTextInput"] input,
+[data-baseweb="select"] > div, [data-baseweb="input"] {
+    background-color: var(--card-bg) !important;
+    color: var(--navy) !important;
 }
 
 /* Alert boxes (info/success/error/warning) get rounder corners */
