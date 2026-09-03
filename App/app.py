@@ -11,6 +11,18 @@ st.set_page_config(
     page_title="ICU Mortality Risk Predictor", page_icon="🏥", layout="wide"
 )
 
+# Hide Streamlit's built-in menu (the "⋮" in the top-right) entirely so
+# visitors can't manually switch to Dark mode and override the light
+# theme forced in .streamlit/config.toml
+st.markdown("""
+<style>
+#MainMenu { visibility: hidden; }
+[data-testid="stMainMenu"] { visibility: hidden; }
+[data-testid="stHeader"] { visibility: hidden; height: 0; }
+[data-testid="stToolbar"] { visibility: hidden; }
+</style>
+""", unsafe_allow_html=True)
+
 # ---------------------------------------------------------------------------
 # Theme — matches the project's presentation palette
 # Navy #0B2545 · Teal #146C94 · Coral #E4572E · Mint #3AAFA9
