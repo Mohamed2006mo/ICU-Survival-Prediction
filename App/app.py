@@ -12,74 +12,81 @@ st.set_page_config(
 )
 
 # ---------------------------------------------------------------------------
-# Theme — forced light, explicit colors on every surface so the app looks
-# identical regardless of the visitor's system/browser Dark mode setting.
-# Navy #0B2545 · Teal #146C94 · Coral #E4572E · Mint #3AAFA9
+# Theme — "Coolors" palette, forced light regardless of visitor's system/
+# browser Dark mode setting. Explicit colors on every surface.
+# Darkest #0D1B2A · Dark #1B263B · Steel #415A77 · Muted #778DA9 · Cream #E0E1DD
 # ---------------------------------------------------------------------------
 st.markdown("""
 <style>
 :root {
-    --navy: #0B2545;
-    --teal: #146C94;
-    --coral: #E4572E;
-    --mint: #3AAFA9;
-    --ice: #E8F1F8;
-    --slate: #45536B;
-    --page-bg: #F7F9FC;
+    --c-darkest: #0D1B2A;
+    --c-dark: #1B263B;
+    --c-steel: #415A77;
+    --c-muted: #778DA9;
+    --c-cream: #E0E1DD;
+    --page-bg: #F4F5F3;
     --card-bg: #FFFFFF;
-    --border: #E2E8F0;
+    --border: #D9DCD6;
+    --accent: #E4572E;
 }
 
 /* Force the whole app surface to light, in both themes */
-.stApp, [data-testid="stAppViewContainer"], [data-testid="stMain"] {
+html, body, .stApp, [data-testid="stAppViewContainer"], [data-testid="stMain"],
+[data-testid="stBottomBlockContainer"] {
     background-color: var(--page-bg) !important;
+    color: var(--c-dark) !important;
 }
 [data-testid="stHeader"] { background-color: transparent !important; }
 
-/* Body text stays dark navy regardless of theme */
-.stApp, .stApp p, .stApp span, .stApp li, .stApp label {
-    color: var(--navy) !important;
-}
+/* Body text stays dark regardless of theme */
+p, span, li, label, div { color: var(--c-dark); }
 
 /* Headings */
-h1, h2, h3, h4 { color: var(--navy) !important; font-weight: 700 !important; }
-h1 { border-bottom: 3px solid var(--coral); padding-bottom: 0.4rem; display: inline-block; }
+h1, h2, h3, h4 { color: var(--c-darkest) !important; font-weight: 700 !important; }
+h1 { border-bottom: 3px solid var(--accent); padding-bottom: 0.4rem; display: inline-block; }
 
-/* Sidebar — always navy background, always light text, in both themes */
-[data-testid="stSidebar"], [data-testid="stSidebar"] > div {
-    background-color: var(--navy) !important;
+/* Sidebar — always dark navy background, always cream text, in both themes */
+section[data-testid="stSidebar"] {
+    background-color: var(--c-darkest) !important;
 }
-[data-testid="stSidebar"] * { color: #E8F1F8 !important; }
-[data-testid="stSidebar"] h3 {
-    color: var(--mint) !important;
-    letter-spacing: 2px;
-    font-size: 0.8rem !important;
+section[data-testid="stSidebar"] p,
+section[data-testid="stSidebar"] span,
+section[data-testid="stSidebar"] label,
+section[data-testid="stSidebar"] div,
+section[data-testid="stSidebar"] h1,
+section[data-testid="stSidebar"] h2,
+section[data-testid="stSidebar"] h3,
+section[data-testid="stSidebar"] h4,
+section[data-testid="stSidebar"] markdown {
+    color: var(--c-cream) !important;
+}
+section[data-testid="stSidebar"] h3 {
+    color: var(--c-muted) !important;
+    letter-spacing: 1.5px;
+    font-size: 0.75rem !important;
     border: none;
 }
-[data-testid="stSidebar"] label {
-    font-size: 1rem !important;
-    padding: 0.35rem 0;
-}
-[data-testid="stSidebar"] [role="radiogroup"] label:hover {
-    background-color: rgba(255,255,255,0.06);
+section[data-testid="stSidebar"] [role="radiogroup"] label:hover {
+    background-color: rgba(255,255,255,0.08);
     border-radius: 6px;
 }
+section[data-testid="stSidebar"] hr { border-color: rgba(255,255,255,0.15) !important; }
 
-/* Metric cards — always white with navy text, regardless of theme */
+/* Metric cards — always white with dark text, regardless of theme */
 div[data-testid="stMetric"] {
     background-color: var(--card-bg) !important;
     border: 1px solid var(--border);
-    border-left: 5px solid var(--teal);
+    border-left: 5px solid var(--c-steel);
     border-radius: 10px;
     padding: 1rem 1.2rem;
-    box-shadow: 0 2px 8px rgba(11, 37, 69, 0.06);
+    box-shadow: 0 2px 8px rgba(13, 27, 42, 0.06);
 }
-div[data-testid="stMetric"] label { color: var(--slate) !important; font-weight: 600; }
-div[data-testid="stMetric"] [data-testid="stMetricValue"] { color: var(--navy) !important; }
+div[data-testid="stMetric"] label { color: var(--c-steel) !important; font-weight: 600; }
+div[data-testid="stMetric"] [data-testid="stMetricValue"] { color: var(--c-darkest) !important; }
 
 /* Buttons */
 .stButton > button, .stFormSubmitButton > button {
-    background-color: var(--coral) !important;
+    background-color: var(--accent) !important;
     color: white !important;
     border: none;
     border-radius: 8px;
@@ -91,6 +98,7 @@ div[data-testid="stMetric"] [data-testid="stMetricValue"] { color: var(--navy) !
     background-color: #C8441E !important;
     color: white !important;
 }
+.stButton > button p, .stFormSubmitButton > button p { color: white !important; }
 
 /* Containers / expanders / bordered result cards — always white */
 div[data-testid="stExpander"], div[data-testid="stVerticalBlockBorderWrapper"] {
@@ -103,7 +111,7 @@ div[data-testid="stExpander"], div[data-testid="stVerticalBlockBorderWrapper"] {
 [data-testid="stNumberInput"] input, [data-testid="stTextInput"] input,
 [data-baseweb="select"] > div, [data-baseweb="input"] {
     background-color: var(--card-bg) !important;
-    color: var(--navy) !important;
+    color: var(--c-dark) !important;
 }
 
 /* Alert boxes (info/success/error/warning) get rounder corners */
@@ -113,7 +121,7 @@ div[data-testid="stAlert"] { border-radius: 10px; }
 [data-testid="stDataFrame"] { border-radius: 8px; overflow: hidden; }
 
 /* Captions */
-.stCaption, [data-testid="stCaptionContainer"] { color: var(--slate) !important; }
+.stCaption, [data-testid="stCaptionContainer"] { color: var(--c-steel) !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -170,7 +178,7 @@ st.sidebar.markdown(
         <div style="font-size: 1.05rem; font-weight: 700; color: white; margin-top: 0.2rem;">
             ICU Risk Predictor
         </div>
-        <div style="font-size: 0.75rem; color: #9AA5B1;">Graduation Project · Data Science</div>
+        <div style="font-size: 0.75rem; color: #778DA9;">Graduation Project · Data Science</div>
     </div>
     <hr style="border-color: rgba(255,255,255,0.15); margin: 0 0 1rem 0;">
     """,
@@ -195,7 +203,7 @@ st.sidebar.markdown(
     unsafe_allow_html=True,
 )
 st.sidebar.markdown(
-    "<div style='font-size:0.7rem; color:#9AA5B1; letter-spacing:1px; margin-bottom:0.3rem;'>"
+    "<div style='font-size:0.7rem; color:#778DA9; letter-spacing:1px; margin-bottom:0.3rem;'>"
     "FOR DEVELOPERS / TECHNICAL REVIEWERS</div>",
     unsafe_allow_html=True,
 )
@@ -269,7 +277,7 @@ elif page == "Data Exploration":
     st.markdown("#### Class Imbalance")
     fig = go.Figure(go.Bar(
         x=["Survived", "Died"], y=[91.3, 8.6],
-        marker_color=["#3AAFA9", "#E4572E"], text=["91.3%", "8.6%"], textposition="outside"
+        marker_color=["#415A77", "#E4572E"], text=["91.3%", "8.6%"], textposition="outside"
     ))
     fig.update_layout(height=320, yaxis_title="Percentage (%)", margin=dict(l=20, r=20, t=20, b=20))
     st.plotly_chart(fig, use_container_width=True)
@@ -292,7 +300,7 @@ elif page == "Data Exploration":
                 "d1_sysbp_min", "d1_spo2_range", "spo2_resprate_ratio"]
     mi_scores = [0.073, 0.071, 0.039, 0.039, 0.036, 0.036, 0.030, 0.028, 0.021, 0.021]
     fig3 = px.bar(x=mi_scores, y=mi_feats, orientation="h", labels={"x": "Information Gain", "y": ""})
-    fig3.update_traces(marker_color="#146C94")
+    fig3.update_traces(marker_color="#1B263B")
     fig3.update_layout(height=400, yaxis={"categoryorder": "total ascending"}, margin=dict(l=20, r=20, t=20, b=20))
     st.plotly_chart(fig3, use_container_width=True)
     st.caption("Engineered features (shock_index, spo2_range, spo2_resprate_ratio) rank alongside raw clinical scores — confirming they carry real predictive signal.")
@@ -456,15 +464,15 @@ elif page == "Prediction":
                 if prediction == 1:
                     badge_color, badge_bg, badge_text = "#E4572E", "#FDEDE8", "⚠️ HIGH RISK"
                 else:
-                    badge_color, badge_bg, badge_text = "#3AAFA9", "#E6F7F6", "✅ LOW RISK"
+                    badge_color, badge_bg, badge_text = "#415A77", "#E8EBF0", "✅ LOW RISK"
 
                 st.markdown(
                     f"""
                     <div style="text-align:center; padding: 1.2rem 0;">
-                        <div style="font-size: 3.5rem; font-weight: 800; color: #0B2545; line-height: 1;">
+                        <div style="font-size: 3.5rem; font-weight: 800; color: #0D1B2A; line-height: 1;">
                             {proba:.1%}
                         </div>
-                        <div style="font-size: 0.95rem; color: #45536B; margin-top: 0.3rem;">
+                        <div style="font-size: 0.95rem; color: #415A77; margin-top: 0.3rem;">
                             Predicted Mortality Risk
                         </div>
                         <div style="display:inline-block; margin-top: 1rem; padding: 0.45rem 1.1rem;
@@ -473,7 +481,7 @@ elif page == "Prediction":
                                     letter-spacing: 0.5px;">
                             {badge_text}
                         </div>
-                        <div style="font-size: 0.8rem; color: #9AA5B1; margin-top: 0.8rem;">
+                        <div style="font-size: 0.8rem; color: #778DA9; margin-top: 0.8rem;">
                             Decision threshold: {threshold:.0%}
                         </div>
                     </div>
@@ -485,7 +493,7 @@ elif page == "Prediction":
                 st.markdown("**Key Patient Vitals**")
 
                 def vital_row(label, value, unit, is_flagged, flag_note):
-                    color = "#E4572E" if is_flagged else "#3AAFA9"
+                    color = "#E4572E" if is_flagged else "#415A77"
                     icon = "🔴" if is_flagged else "🟢"
                     note = f"<span style='color:{color}; font-size:0.8rem;'> — {flag_note}</span>" if is_flagged else ""
                     st.markdown(
@@ -534,7 +542,7 @@ elif page == "Model Performance":
     c1, c2 = st.columns(2)
     with c1:
         fig_cv1 = px.bar(x=[f"Fold {i+1}" for i in range(5)], y=CV_AUROC_FOLDS, labels={"x": "", "y": "AUROC"})
-        fig_cv1.update_traces(marker_color="#146C94")
+        fig_cv1.update_traces(marker_color="#1B263B")
         fig_cv1.update_layout(height=300, yaxis_range=[0.85, 0.92], margin=dict(l=20, r=20, t=30, b=20),
                                title=f"AUROC per Fold (mean {np.mean(CV_AUROC_FOLDS):.4f})")
         st.plotly_chart(fig_cv1, use_container_width=True)
@@ -558,7 +566,7 @@ elif page == "All Models Comparison":
 
     comp_df = pd.DataFrame(MODEL_METRICS).T.reset_index().rename(columns={"index": "Model"})
     fig = go.Figure()
-    fig.add_trace(go.Bar(name="AUROC", x=comp_df["Model"], y=comp_df["AUROC"], marker_color="#146C94"))
+    fig.add_trace(go.Bar(name="AUROC", x=comp_df["Model"], y=comp_df["AUROC"], marker_color="#1B263B"))
     fig.add_trace(go.Bar(name="AUPRC", x=comp_df["Model"], y=comp_df["AUPRC"], marker_color="#E4572E"))
     fig.update_layout(barmode="group", height=420, yaxis_range=[0, 1], margin=dict(l=20, r=20, t=20, b=20))
     st.plotly_chart(fig, use_container_width=True)
