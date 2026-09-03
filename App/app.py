@@ -156,46 +156,87 @@ st.sidebar.markdown(
     """,
     unsafe_allow_html=True,
 )
-st.sidebar.markdown("### NAVIGATION")
-page = st.sidebar.radio(
-    label="Navigation",
-    options=["Overview", "Data Exploration", "Prediction", "Model Performance", "All Models Comparison"],
+
+if "active_page" not in st.session_state:
+    st.session_state["active_page"] = "Overview"
+
+st.sidebar.markdown("### 🩺 CLINICAL TOOLS")
+clinical_pages = ["Overview", "Data Exploration", "Prediction"]
+clinical_choice = st.sidebar.radio(
+    label="Clinical",
+    options=clinical_pages,
+    index=clinical_pages.index(st.session_state["active_page"]) if st.session_state["active_page"] in clinical_pages else None,
     label_visibility="collapsed",
+    key="clinical_radio",
 )
+
+st.sidebar.markdown(
+    "<hr style='border-color: rgba(255,255,255,0.15); margin: 1.2rem 0 0.8rem 0;'>",
+    unsafe_allow_html=True,
+)
+st.sidebar.markdown(
+    "<div style='font-size:0.7rem; color:#9AA5B1; letter-spacing:1px; margin-bottom:0.3rem;'>"
+    "FOR DEVELOPERS / TECHNICAL REVIEWERS</div>",
+    unsafe_allow_html=True,
+)
+st.sidebar.markdown("### ⚙️ TECHNICAL DETAILS")
+technical_pages = ["Model Performance", "All Models Comparison"]
+technical_choice = st.sidebar.radio(
+    label="Technical",
+    options=technical_pages,
+    index=technical_pages.index(st.session_state["active_page"]) if st.session_state["active_page"] in technical_pages else None,
+    label_visibility="collapsed",
+    key="technical_radio",
+)
+
+# Whichever radio group the user just clicked determines the active page
+if clinical_choice != st.session_state.get("_last_clinical"):
+    st.session_state["active_page"] = clinical_choice
+    st.session_state["_last_clinical"] = clinical_choice
+    st.session_state["_last_technical"] = None
+elif technical_choice != st.session_state.get("_last_technical"):
+    st.session_state["active_page"] = technical_choice
+    st.session_state["_last_technical"] = technical_choice
+    st.session_state["_last_clinical"] = None
+
+page = st.session_state["active_page"]
 
 # ===========================================================================
 # PAGE 1 — OVERVIEW
 # ===========================================================================
 if page == "Overview":
     st.title("🏥 ICU Mortality Risk Predictor")
-    st.caption("A machine learning pipeline for ICU patient survival prediction")
+    st.caption("A clinical decision-support tool for early risk assessment")
     st.divider()
 
     c1, c2, c3, c4 = st.columns(4)
-    c1.metric("Total Encounters", "91,713")
-    c2.metric("Mortality Rate", "8.6%")
-    c3.metric("Features Used", "40")
-    c4.metric("Model", "XGBoost")
+    c1.metric("Patients Analyzed", "91,713")
+    c2.metric("Observed Mortality", "8.6%")
+    c3.metric("Deaths Correctly Flagged", "84%")
+    c4.metric("Validation", "5-Fold Tested")
 
     st.write("")
-    st.markdown("#### About this project")
+    st.markdown("#### About this tool")
     st.markdown(
         """
-This tool estimates in-hospital mortality risk for ICU patients using a machine learning
-pipeline built on 91,713 ICU encounters.
+This tool estimates a patient's risk of in-hospital mortality based on admission data —
+vital signs, lab results, and clinical scores collected during the first day in the ICU.
 
-**Pipeline summary:**
-- Cleaned and imputed raw clinical data (missing-value audit, median/most-frequent imputation)
-- Engineered clinical features (shock index, GCS total score, vital-sign ranges)
-- Handled severe class imbalance (91.3% survived vs. 8.6% died) using `scale_pos_weight`
-- Selected the 40 most informative features via Mutual Information + Recursive Feature Elimination
-- Compared 3 models (Logistic Regression, Random Forest, XGBoost) — XGBoost performed best
-- Tuned the decision threshold to balance recall against false-alarm rate
-- Validated stability with 5-fold cross-validation
+It was trained and validated on 91,713 real ICU patient records, and is designed to support
+— not replace — clinical judgment.
 
-Use the sidebar to explore the data, get a live prediction, or review model performance.
+**How to use it:**
+- Go to the **Prediction** page
+- Enter the patient's vitals, labs, and clinical scores (or upload a CSV)
+- Get an instant risk estimate with the specific vitals driving that result
+
+**Reliability:**
+- Correctly flags 84% of patients who are at high risk of not surviving
+- Tested for consistency across 5 different patient sample groups, with stable results each time
         """
     )
+
+    st.info("⚕️ This tool provides a decision-support estimate, not a diagnosis. Always use clinical judgment alongside this output.")
 
 # ===========================================================================
 # PAGE 2 — DATA EXPLORATION
