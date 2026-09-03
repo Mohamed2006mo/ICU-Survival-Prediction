@@ -1,3 +1,4 @@
+import os
 import json
 import joblib
 import numpy as np
@@ -14,8 +15,7 @@ st.set_page_config(
 # Theme — matches the project's presentation palette
 # Navy #0B2545 · Teal #146C94 · Coral #E4572E · Mint #3AAFA9
 # ---------------------------------------------------------------------------
-st.markdown(
-    """
+st.markdown("""
 <style>
 :root {
     --navy: #0B2545;
@@ -95,38 +95,27 @@ div[data-testid="stAlert"] { border-radius: 10px; }
 /* Captions */
 .stCaption, [data-testid="stCaptionContainer"] { color: var(--slate) !important; }
 </style>
-""",
-    unsafe_allow_html=True,
-)
-
+""", unsafe_allow_html=True)
 
 # ---------------------------------------------------------------------------
 # Load model artifacts (cached so they only load once per session)
 # ---------------------------------------------------------------------------
 @st.cache_resource
 def load_artifacts():
-    model = joblib.load("xgb_icu_model.pkl")
-    num_imputer = joblib.load("num_imputer.pkl")
-    cat_imputer = joblib.load("cat_imputer.pkl")
-    with open("final_40_features.json") as f:
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    model = joblib.load(os.path.join(base_dir, "xgb_icu_model.pkl"))
+    num_imputer = joblib.load(os.path.join(base_dir, "num_imputer.pkl"))
+    cat_imputer = joblib.load(os.path.join(base_dir, "cat_imputer.pkl"))
+    with open(os.path.join(base_dir, "final_40_features.json")) as f:
         final_40_features = json.load(f)
-    with open("chosen_threshold.json") as f:
+    with open(os.path.join(base_dir, "chosen_threshold.json")) as f:
         threshold = json.load(f)["threshold"]
-    with open("encoded_columns.json") as f:
+    with open(os.path.join(base_dir, "encoded_columns.json")) as f:
         encoded_columns = json.load(f)
-    return (
-        model,
-        num_imputer,
-        cat_imputer,
-        final_40_features,
-        threshold,
-        encoded_columns,
-    )
+    return model, num_imputer, cat_imputer, final_40_features, threshold, encoded_columns
 
 
-model, num_imputer, cat_imputer, final_40_features, threshold, encoded_columns = (
-    load_artifacts()
-)
+model, num_imputer, cat_imputer, final_40_features, threshold, encoded_columns = load_artifacts()
 
 num_cols = list(num_imputer.feature_names_in_)
 num_defaults = dict(zip(num_cols, num_imputer.statistics_))
@@ -144,8 +133,8 @@ if "ventilated_status" not in st.session_state:
 # ---------------------------------------------------------------------------
 MODEL_METRICS = {
     "Logistic Regression": {"AUROC": 0.874, "AUPRC": 0.462},
-    "Random Forest": {"AUROC": 0.889, "AUPRC": 0.511},
-    "XGBoost": {"AUROC": 0.893, "AUPRC": 0.554},
+    "Random Forest":       {"AUROC": 0.889, "AUPRC": 0.511},
+    "XGBoost":             {"AUROC": 0.893, "AUPRC": 0.554},
 }
 CV_AUROC_FOLDS = [0.8908, 0.8883, 0.8897, 0.8918, 0.8906]
 CV_AUPRC_FOLDS = [0.5367, 0.5316, 0.5481, 0.5431, 0.5391]
@@ -170,13 +159,7 @@ st.sidebar.markdown(
 st.sidebar.markdown("### NAVIGATION")
 page = st.sidebar.radio(
     label="Navigation",
-    options=[
-        "Overview",
-        "Data Exploration",
-        "Prediction",
-        "Model Performance",
-        "All Models Comparison",
-    ],
+    options=["Overview", "Data Exploration", "Prediction", "Model Performance", "All Models Comparison"],
     label_visibility="collapsed",
 )
 
@@ -223,41 +206,19 @@ elif page == "Data Exploration":
     st.divider()
 
     st.markdown("#### Class Imbalance")
-    fig = go.Figure(
-        go.Bar(
-            x=["Survived", "Died"],
-            y=[91.3, 8.6],
-            marker_color=["#3AAFA9", "#E4572E"],
-            text=["91.3%", "8.6%"],
-            textposition="outside",
-        )
-    )
-    fig.update_layout(
-        height=320, yaxis_title="Percentage (%)", margin=dict(l=20, r=20, t=20, b=20)
-    )
+    fig = go.Figure(go.Bar(
+        x=["Survived", "Died"], y=[91.3, 8.6],
+        marker_color=["#3AAFA9", "#E4572E"], text=["91.3%", "8.6%"], textposition="outside"
+    ))
+    fig.update_layout(height=320, yaxis_title="Percentage (%)", margin=dict(l=20, r=20, t=20, b=20))
     st.plotly_chart(fig, use_container_width=True)
-    st.info(
-        "A model predicting 'survived' for everyone would score ~91% accuracy while being clinically useless — this is why AUROC/AUPRC were used instead of accuracy throughout this project."
-    )
+    st.info("A model predicting 'survived' for everyone would score ~91% accuracy while being clinically useless — this is why AUROC/AUPRC were used instead of accuracy throughout this project.")
 
     st.write("")
     st.markdown("#### Mortality Rate by Age Group")
-    age_bins = [
-        "15-23",
-        "23-31",
-        "31-38",
-        "38-45",
-        "45-53",
-        "53-60",
-        "60-67",
-        "67-74",
-        "74-82",
-        "82-89",
-    ]
+    age_bins = ["15-23", "23-31", "31-38", "38-45", "45-53", "53-60", "60-67", "67-74", "74-82", "82-89"]
     mortality = [2.9, 2.8, 4.2, 4.2, 5.2, 6.5, 9.7, 9.4, 11.3, 13.7]
-    fig2 = px.bar(
-        x=age_bins, y=mortality, labels={"x": "Age Bin", "y": "Mortality Rate (%)"}
-    )
+    fig2 = px.bar(x=age_bins, y=mortality, labels={"x": "Age Bin", "y": "Mortality Rate (%)"})
     fig2.update_traces(marker_color="#E4572E")
     fig2.update_layout(height=320, margin=dict(l=20, r=20, t=20, b=20))
     st.plotly_chart(fig2, use_container_width=True)
@@ -265,35 +226,15 @@ elif page == "Data Exploration":
 
     st.write("")
     st.markdown("#### Top Features by Mutual Information")
-    mi_feats = [
-        "apache_4a_icu_death_prob",
-        "apache_4a_hospital_death_prob",
-        "apache_3j_diagnosis",
-        "gcs_motor_apache",
-        "gcs_total_score",
-        "gcs_eyes_apache",
-        "shock_index",
-        "d1_sysbp_min",
-        "d1_spo2_range",
-        "spo2_resprate_ratio",
-    ]
+    mi_feats = ["apache_4a_icu_death_prob", "apache_4a_hospital_death_prob", "apache_3j_diagnosis",
+                "gcs_motor_apache", "gcs_total_score", "gcs_eyes_apache", "shock_index",
+                "d1_sysbp_min", "d1_spo2_range", "spo2_resprate_ratio"]
     mi_scores = [0.073, 0.071, 0.039, 0.039, 0.036, 0.036, 0.030, 0.028, 0.021, 0.021]
-    fig3 = px.bar(
-        x=mi_scores,
-        y=mi_feats,
-        orientation="h",
-        labels={"x": "Information Gain", "y": ""},
-    )
+    fig3 = px.bar(x=mi_scores, y=mi_feats, orientation="h", labels={"x": "Information Gain", "y": ""})
     fig3.update_traces(marker_color="#146C94")
-    fig3.update_layout(
-        height=400,
-        yaxis={"categoryorder": "total ascending"},
-        margin=dict(l=20, r=20, t=20, b=20),
-    )
+    fig3.update_layout(height=400, yaxis={"categoryorder": "total ascending"}, margin=dict(l=20, r=20, t=20, b=20))
     st.plotly_chart(fig3, use_container_width=True)
-    st.caption(
-        "Engineered features (shock_index, spo2_range, spo2_resprate_ratio) rank alongside raw clinical scores — confirming they carry real predictive signal."
-    )
+    st.caption("Engineered features (shock_index, spo2_range, spo2_resprate_ratio) rank alongside raw clinical scores — confirming they carry real predictive signal.")
 
 # ===========================================================================
 # PAGE 3 — PREDICTION (the original form, unchanged logic)
@@ -307,9 +248,7 @@ elif page == "Prediction":
     st.divider()
 
     st.markdown("### 📥 Auto-Fill Form from CSV")
-    st.info(
-        "Upload a patient CSV. The form below will automatically fill with the data from the first row so you don't have to type it manually."
-    )
+    st.info("Upload a patient CSV. The form below will automatically fill with the data from the first row so you don't have to type it manually.")
     uploaded_file = st.file_uploader("Upload CSV", type=["csv"])
 
     if uploaded_file is not None:
@@ -321,12 +260,8 @@ elif page == "Prediction":
                     if col in st.session_state:
                         st.session_state[col] = float(row_data[col])
                 if "ventilated_apache" in df.columns:
-                    st.session_state["ventilated_status"] = (
-                        "Yes" if int(row_data["ventilated_apache"]) == 1 else "No"
-                    )
-                st.success(
-                    "✅ Form successfully auto-filled! You can now review or edit the inputs below before predicting."
-                )
+                    st.session_state["ventilated_status"] = "Yes" if int(row_data["ventilated_apache"]) == 1 else "No"
+                st.success("✅ Form successfully auto-filled! You can now review or edit the inputs below before predicting.")
         except Exception as e:
             st.error(f"Error reading CSV: {e}")
 
@@ -337,207 +272,108 @@ elif page == "Prediction":
         c1, c2 = st.columns(2)
         with c1:
             apache_4a_icu_death_prob = st.number_input(
-                "APACHE IVa ICU death probability",
-                min_value=0.0,
-                max_value=1.0,
-                value=float(st.session_state["apache_4a_icu_death_prob"]),
-                step=0.01,
-            )
+                "APACHE IVa ICU death probability", min_value=0.0, max_value=1.0,
+                value=float(st.session_state["apache_4a_icu_death_prob"]), step=0.01)
             apache_2_diagnosis = st.number_input(
-                "APACHE II diagnosis code",
-                value=float(st.session_state["apache_2_diagnosis"]),
-                step=1.0,
-            )
-            gcs_motor_apache = st.slider(
-                "Motor response", 1, 6, int(st.session_state["gcs_motor_apache"])
-            )
-            gcs_verbal_apache = st.slider(
-                "Verbal response", 1, 5, int(st.session_state["gcs_verbal_apache"])
-            )
+                "APACHE II diagnosis code", value=float(st.session_state["apache_2_diagnosis"]), step=1.0)
+            gcs_motor_apache = st.slider("Motor response", 1, 6, int(st.session_state["gcs_motor_apache"]))
+            gcs_verbal_apache = st.slider("Verbal response", 1, 5, int(st.session_state["gcs_verbal_apache"]))
         with c2:
             apache_4a_hospital_death_prob = st.number_input(
-                "APACHE IVa hospital death probability",
-                min_value=0.0,
-                max_value=1.0,
-                value=float(st.session_state["apache_4a_hospital_death_prob"]),
-                step=0.01,
-            )
+                "APACHE IVa hospital death probability", min_value=0.0, max_value=1.0,
+                value=float(st.session_state["apache_4a_hospital_death_prob"]), step=0.01)
             apache_3j_diagnosis = st.number_input(
-                "APACHE IIIj diagnosis code",
-                value=float(st.session_state["apache_3j_diagnosis"]),
-                step=1.0,
-            )
-            gcs_eyes_apache = st.slider(
-                "Eye opening", 1, 4, int(st.session_state["gcs_eyes_apache"])
-            )
+                "APACHE IIIj diagnosis code", value=float(st.session_state["apache_3j_diagnosis"]), step=1.0)
+            gcs_eyes_apache = st.slider("Eye opening", 1, 4, int(st.session_state["gcs_eyes_apache"]))
             vent_options = ["No", "Yes"]
             vent_index = vent_options.index(st.session_state["ventilated_status"])
-            ventilated_apache = st.selectbox(
-                "Ventilated on admission?", vent_options, index=vent_index
-            )
+            ventilated_apache = st.selectbox("Ventilated on admission?", vent_options, index=vent_index)
 
         st.write("")
         st.markdown("### 🫀 2. Vitals — First Day (Day 1) Min/Max")
         c1, c2 = st.columns(2)
         with c1:
-            d1_heartrate_max = st.number_input(
-                "Heart rate — max (bpm)",
-                value=float(st.session_state["d1_heartrate_max"]),
-            )
-            d1_sysbp_min = st.number_input(
-                "Systolic BP — min (mmHg)",
-                value=float(st.session_state["d1_sysbp_min"]),
-            )
-            d1_sysbp_noninvasive_min = st.number_input(
-                "Systolic BP (non-inv) — min",
-                value=float(st.session_state["d1_sysbp_noninvasive_min"]),
-            )
-            d1_mbp_min = st.number_input(
-                "Mean BP — min (mmHg)", value=float(st.session_state["d1_mbp_min"])
-            )
-            d1_mbp_noninvasive_min = st.number_input(
-                "Mean BP (non-inv) — min",
-                value=float(st.session_state["d1_mbp_noninvasive_min"]),
-            )
-            d1_diasbp_min = st.number_input(
-                "Diastolic BP — min (mmHg)",
-                value=float(st.session_state["d1_diasbp_min"]),
-            )
-            d1_diasbp_noninvasive_min = st.number_input(
-                "Diastolic BP (non-inv) — min",
-                value=float(st.session_state["d1_diasbp_noninvasive_min"]),
-            )
+            d1_heartrate_max = st.number_input("Heart rate — max (bpm)", value=float(st.session_state["d1_heartrate_max"]))
+            d1_sysbp_min = st.number_input("Systolic BP — min (mmHg)", value=float(st.session_state["d1_sysbp_min"]))
+            d1_sysbp_noninvasive_min = st.number_input("Systolic BP (non-inv) — min", value=float(st.session_state["d1_sysbp_noninvasive_min"]))
+            d1_mbp_min = st.number_input("Mean BP — min (mmHg)", value=float(st.session_state["d1_mbp_min"]))
+            d1_mbp_noninvasive_min = st.number_input("Mean BP (non-inv) — min", value=float(st.session_state["d1_mbp_noninvasive_min"]))
+            d1_diasbp_min = st.number_input("Diastolic BP — min (mmHg)", value=float(st.session_state["d1_diasbp_min"]))
+            d1_diasbp_noninvasive_min = st.number_input("Diastolic BP (non-inv) — min", value=float(st.session_state["d1_diasbp_noninvasive_min"]))
         with c2:
-            d1_heartrate_min = st.number_input(
-                "Heart rate — min (bpm)",
-                value=float(st.session_state["d1_heartrate_min"]),
-            )
-            d1_spo2_min = st.number_input(
-                "SpO2 — min (%)", value=float(st.session_state["d1_spo2_min"])
-            )
-            d1_spo2_max = st.number_input(
-                "SpO2 — max (%)", value=float(st.session_state["d1_spo2_max"])
-            )
-            d1_temp_min = st.number_input(
-                "Temperature — min (°C)", value=float(st.session_state["d1_temp_min"])
-            )
-            d1_temp_max = st.number_input(
-                "Temperature — max (°C)", value=float(st.session_state["d1_temp_max"])
-            )
-            h1_resprate_min = st.number_input(
-                "Resp. rate (hour 1) — min",
-                value=float(st.session_state["h1_resprate_min"]),
-            )
-            d1_resprate_min = st.number_input(
-                "Resp. rate (day 1) — min",
-                value=float(st.session_state["d1_resprate_min"]),
-            )
-            h1_resprate_max = st.number_input(
-                "Resp. rate (hour 1) — max",
-                value=float(st.session_state["h1_resprate_max"]),
-            )
+            d1_heartrate_min = st.number_input("Heart rate — min (bpm)", value=float(st.session_state["d1_heartrate_min"]))
+            d1_spo2_min = st.number_input("SpO2 — min (%)", value=float(st.session_state["d1_spo2_min"]))
+            d1_spo2_max = st.number_input("SpO2 — max (%)", value=float(st.session_state["d1_spo2_max"]))
+            d1_temp_min = st.number_input("Temperature — min (°C)", value=float(st.session_state["d1_temp_min"]))
+            d1_temp_max = st.number_input("Temperature — max (°C)", value=float(st.session_state["d1_temp_max"]))
+            h1_resprate_min = st.number_input("Resp. rate (hour 1) — min", value=float(st.session_state["h1_resprate_min"]))
+            d1_resprate_min = st.number_input("Resp. rate (day 1) — min", value=float(st.session_state["d1_resprate_min"]))
+            h1_resprate_max = st.number_input("Resp. rate (hour 1) — max", value=float(st.session_state["h1_resprate_max"]))
 
         st.write("")
         st.markdown("### 🧪 3. Laboratory Results")
         c1, c2 = st.columns(2)
         with c1:
-            bun_apache = st.number_input(
-                "BUN (APACHE)", value=float(st.session_state["bun_apache"])
-            )
-            d1_bun_max = st.number_input(
-                "BUN — max", value=float(st.session_state["d1_bun_max"])
-            )
-            d1_bun_min = st.number_input(
-                "BUN — min", value=float(st.session_state["d1_bun_min"])
-            )
-            creatinine_apache = st.number_input(
-                "Creatinine (APACHE)",
-                value=float(st.session_state["creatinine_apache"]),
-            )
-            d1_creatinine_max = st.number_input(
-                "Creatinine — max", value=float(st.session_state["d1_creatinine_max"])
-            )
-            d1_creatinine_min = st.number_input(
-                "Creatinine — min", value=float(st.session_state["d1_creatinine_min"])
-            )
+            bun_apache = st.number_input("BUN (APACHE)", value=float(st.session_state["bun_apache"]))
+            d1_bun_max = st.number_input("BUN — max", value=float(st.session_state["d1_bun_max"]))
+            d1_bun_min = st.number_input("BUN — min", value=float(st.session_state["d1_bun_min"]))
+            creatinine_apache = st.number_input("Creatinine (APACHE)", value=float(st.session_state["creatinine_apache"]))
+            d1_creatinine_max = st.number_input("Creatinine — max", value=float(st.session_state["d1_creatinine_max"]))
+            d1_creatinine_min = st.number_input("Creatinine — min", value=float(st.session_state["d1_creatinine_min"]))
         with c2:
-            temp_apache = st.number_input(
-                "Temperature (APACHE)", value=float(st.session_state["temp_apache"])
-            )
-            d1_hco3_min = st.number_input(
-                "HCO3 — min", value=float(st.session_state["d1_hco3_min"])
-            )
-            d1_hco3_max = st.number_input(
-                "HCO3 — max", value=float(st.session_state["d1_hco3_max"])
-            )
-            d1_wbc_max = st.number_input(
-                "WBC — max", value=float(st.session_state["d1_wbc_max"])
-            )
-            d1_platelets_min = st.number_input(
-                "Platelets — min", value=float(st.session_state["d1_platelets_min"])
-            )
+            temp_apache = st.number_input("Temperature (APACHE)", value=float(st.session_state["temp_apache"]))
+            d1_hco3_min = st.number_input("HCO3 — min", value=float(st.session_state["d1_hco3_min"]))
+            d1_hco3_max = st.number_input("HCO3 — max", value=float(st.session_state["d1_hco3_max"]))
+            d1_wbc_max = st.number_input("WBC — max", value=float(st.session_state["d1_wbc_max"]))
+            d1_platelets_min = st.number_input("Platelets — min", value=float(st.session_state["d1_platelets_min"]))
 
         st.write("")
-        submitted = st.form_submit_button(
-            "Predict Mortality Risk", type="primary", use_container_width=True
-        )
+        submitted = st.form_submit_button("Predict Mortality Risk", type="primary", use_container_width=True)
 
     if submitted:
         row = dict(num_defaults)
-        row.update(
-            {
-                "apache_4a_icu_death_prob": apache_4a_icu_death_prob,
-                "apache_4a_hospital_death_prob": apache_4a_hospital_death_prob,
-                "apache_2_diagnosis": apache_2_diagnosis,
-                "apache_3j_diagnosis": apache_3j_diagnosis,
-                "gcs_motor_apache": gcs_motor_apache,
-                "gcs_eyes_apache": gcs_eyes_apache,
-                "gcs_verbal_apache": gcs_verbal_apache,
-                "ventilated_apache": 1 if ventilated_apache == "Yes" else 0,
-                "d1_heartrate_max": d1_heartrate_max,
-                "d1_heartrate_min": d1_heartrate_min,
-                "d1_sysbp_min": d1_sysbp_min,
-                "d1_sysbp_noninvasive_min": d1_sysbp_noninvasive_min,
-                "d1_mbp_min": d1_mbp_min,
-                "d1_mbp_noninvasive_min": d1_mbp_noninvasive_min,
-                "d1_diasbp_min": d1_diasbp_min,
-                "d1_diasbp_noninvasive_min": d1_diasbp_noninvasive_min,
-                "d1_spo2_min": d1_spo2_min,
-                "d1_spo2_max": d1_spo2_max,
-                "d1_temp_min": d1_temp_min,
-                "d1_temp_max": d1_temp_max,
-                "h1_resprate_min": h1_resprate_min,
-                "d1_resprate_min": d1_resprate_min,
-                "h1_resprate_max": h1_resprate_max,
-                "bun_apache": bun_apache,
-                "d1_bun_max": d1_bun_max,
-                "d1_bun_min": d1_bun_min,
-                "creatinine_apache": creatinine_apache,
-                "d1_creatinine_max": d1_creatinine_max,
-                "d1_creatinine_min": d1_creatinine_min,
-                "temp_apache": temp_apache,
-                "d1_hco3_min": d1_hco3_min,
-                "d1_hco3_max": d1_hco3_max,
-                "d1_wbc_max": d1_wbc_max,
-                "d1_platelets_min": d1_platelets_min,
-            }
-        )
+        row.update({
+            "apache_4a_icu_death_prob": apache_4a_icu_death_prob,
+            "apache_4a_hospital_death_prob": apache_4a_hospital_death_prob,
+            "apache_2_diagnosis": apache_2_diagnosis,
+            "apache_3j_diagnosis": apache_3j_diagnosis,
+            "gcs_motor_apache": gcs_motor_apache,
+            "gcs_eyes_apache": gcs_eyes_apache,
+            "gcs_verbal_apache": gcs_verbal_apache,
+            "ventilated_apache": 1 if ventilated_apache == "Yes" else 0,
+            "d1_heartrate_max": d1_heartrate_max,
+            "d1_heartrate_min": d1_heartrate_min,
+            "d1_sysbp_min": d1_sysbp_min,
+            "d1_sysbp_noninvasive_min": d1_sysbp_noninvasive_min,
+            "d1_mbp_min": d1_mbp_min,
+            "d1_mbp_noninvasive_min": d1_mbp_noninvasive_min,
+            "d1_diasbp_min": d1_diasbp_min,
+            "d1_diasbp_noninvasive_min": d1_diasbp_noninvasive_min,
+            "d1_spo2_min": d1_spo2_min,
+            "d1_spo2_max": d1_spo2_max,
+            "d1_temp_min": d1_temp_min,
+            "d1_temp_max": d1_temp_max,
+            "h1_resprate_min": h1_resprate_min,
+            "d1_resprate_min": d1_resprate_min,
+            "h1_resprate_max": h1_resprate_max,
+            "bun_apache": bun_apache,
+            "d1_bun_max": d1_bun_max,
+            "d1_bun_min": d1_bun_min,
+            "creatinine_apache": creatinine_apache,
+            "d1_creatinine_max": d1_creatinine_max,
+            "d1_creatinine_min": d1_creatinine_min,
+            "temp_apache": temp_apache,
+            "d1_hco3_min": d1_hco3_min,
+            "d1_hco3_max": d1_hco3_max,
+            "d1_wbc_max": d1_wbc_max,
+            "d1_platelets_min": d1_platelets_min,
+        })
 
         X_row = pd.DataFrame([row])[num_cols]
-        X_row["shock_index"] = X_row["d1_heartrate_max"] / (
-            X_row["d1_sysbp_min"] + 1e-5
-        )
-        X_row["spo2_resprate_ratio"] = X_row["d1_spo2_min"] / (
-            X_row["h1_resprate_max"] + 1e-5
-        )
-        X_row["gcs_total_score"] = (
-            X_row["gcs_motor_apache"]
-            + X_row["gcs_eyes_apache"]
-            + X_row["gcs_verbal_apache"]
-        )
-        X_row["d1_heartrate_range"] = (
-            X_row["d1_heartrate_max"] - X_row["d1_heartrate_min"]
-        )
+        X_row["shock_index"] = X_row["d1_heartrate_max"] / (X_row["d1_sysbp_min"] + 1e-5)
+        X_row["spo2_resprate_ratio"] = X_row["d1_spo2_min"] / (X_row["h1_resprate_max"] + 1e-5)
+        X_row["gcs_total_score"] = X_row["gcs_motor_apache"] + X_row["gcs_eyes_apache"] + X_row["gcs_verbal_apache"]
+        X_row["d1_heartrate_range"] = X_row["d1_heartrate_max"] - X_row["d1_heartrate_min"]
         X_row["d1_temp_range"] = X_row["d1_temp_max"] - X_row["d1_temp_min"]
         X_row["d1_spo2_range"] = X_row["d1_spo2_max"] - X_row["d1_spo2_min"]
         X_row["d1_bun_max_log"] = np.log1p(X_row["d1_bun_max"])
@@ -549,9 +385,7 @@ elif page == "Prediction":
 
         st.divider()
         st.markdown("## 📊 Prediction Result")
-        st.caption(
-            "👇 This is the summary view — a clean shot for sharing or reporting."
-        )
+        st.caption("👇 This is the summary view — a clean shot for sharing or reporting.")
 
         result_container = st.container(border=True)
         with result_container:
@@ -559,17 +393,9 @@ elif page == "Prediction":
 
             with c1:
                 if prediction == 1:
-                    badge_color, badge_bg, badge_text = (
-                        "#E4572E",
-                        "#FDEDE8",
-                        "⚠️ HIGH RISK",
-                    )
+                    badge_color, badge_bg, badge_text = "#E4572E", "#FDEDE8", "⚠️ HIGH RISK"
                 else:
-                    badge_color, badge_bg, badge_text = (
-                        "#3AAFA9",
-                        "#E6F7F6",
-                        "✅ LOW RISK",
-                    )
+                    badge_color, badge_bg, badge_text = "#3AAFA9", "#E6F7F6", "✅ LOW RISK"
 
                 st.markdown(
                     f"""
@@ -600,52 +426,18 @@ elif page == "Prediction":
                 def vital_row(label, value, unit, is_flagged, flag_note):
                     color = "#E4572E" if is_flagged else "#3AAFA9"
                     icon = "🔴" if is_flagged else "🟢"
-                    note = (
-                        f"<span style='color:{color}; font-size:0.8rem;'> — {flag_note}</span>"
-                        if is_flagged
-                        else ""
-                    )
+                    note = f"<span style='color:{color}; font-size:0.8rem;'> — {flag_note}</span>" if is_flagged else ""
                     st.markdown(
                         f"<div style='padding:0.35rem 0; border-bottom:1px solid #EEF1F5;'>"
                         f"{icon} <b>{label}:</b> {value}{unit} {note}</div>",
                         unsafe_allow_html=True,
                     )
 
-                vital_row(
-                    "Systolic BP (min)",
-                    f"{d1_sysbp_min:.0f}",
-                    " mmHg",
-                    d1_sysbp_min < 90,
-                    "low — possible hypotension",
-                )
-                vital_row(
-                    "Heart Rate (max)",
-                    f"{d1_heartrate_max:.0f}",
-                    " bpm",
-                    d1_heartrate_max > 120,
-                    "elevated",
-                )
-                vital_row(
-                    "SpO2 (min)",
-                    f"{d1_spo2_min:.0f}",
-                    "%",
-                    d1_spo2_min < 90,
-                    "low oxygenation",
-                )
-                vital_row(
-                    "Temperature (max)",
-                    f"{d1_temp_max:.1f}",
-                    " °C",
-                    d1_temp_max > 38.3,
-                    "fever",
-                )
-                vital_row(
-                    "GCS Total Score",
-                    f"{gcs_motor_apache + gcs_eyes_apache + gcs_verbal_apache:.0f}",
-                    " / 15",
-                    (gcs_motor_apache + gcs_eyes_apache + gcs_verbal_apache) < 13,
-                    "reduced consciousness",
-                )
+                vital_row("Systolic BP (min)", f"{d1_sysbp_min:.0f}", " mmHg", d1_sysbp_min < 90, "low — possible hypotension")
+                vital_row("Heart Rate (max)", f"{d1_heartrate_max:.0f}", " bpm", d1_heartrate_max > 120, "elevated")
+                vital_row("SpO2 (min)", f"{d1_spo2_min:.0f}", "%", d1_spo2_min < 90, "low oxygenation")
+                vital_row("Temperature (max)", f"{d1_temp_max:.1f}", " °C", d1_temp_max > 38.3, "fever")
+                vital_row("GCS Total Score", f"{gcs_motor_apache + gcs_eyes_apache + gcs_verbal_apache:.0f}", " / 15", (gcs_motor_apache + gcs_eyes_apache + gcs_verbal_apache) < 13, "reduced consciousness")
 
             st.caption(
                 "**Disclaimer:** This tool provides a decision-support estimate based on historical machine learning data, "
@@ -668,97 +460,47 @@ elif page == "Model Performance":
     st.write("")
     st.markdown("#### Confusion Matrix (Threshold = 0.40)")
     z = [[CONFUSION["tn"], CONFUSION["fp"]], [CONFUSION["fn"], CONFUSION["tp"]]]
-    fig = go.Figure(
-        data=go.Heatmap(
-            z=z,
-            x=["Predicted: Survived", "Predicted: Died"],
-            y=["Actual: Survived", "Actual: Died"],
-            text=z,
-            texttemplate="%{text:,}",
-            colorscale="Blues",
-            showscale=False,
-        )
-    )
+    fig = go.Figure(data=go.Heatmap(
+        z=z, x=["Predicted: Survived", "Predicted: Died"], y=["Actual: Survived", "Actual: Died"],
+        text=z, texttemplate="%{text:,}", colorscale="Blues", showscale=False
+    ))
     fig.update_layout(height=350, margin=dict(l=20, r=20, t=20, b=20))
     st.plotly_chart(fig, use_container_width=True)
-    st.caption(
-        "Only 256 of 1,583 real deaths are missed — an 84% catch rate, at the cost of more false alarms among survivors."
-    )
+    st.caption("Only 256 of 1,583 real deaths are missed — an 84% catch rate, at the cost of more false alarms among survivors.")
 
     st.write("")
     st.markdown("#### Cross-Validation Stability (5-Fold)")
     c1, c2 = st.columns(2)
     with c1:
-        fig_cv1 = px.bar(
-            x=[f"Fold {i + 1}" for i in range(5)],
-            y=CV_AUROC_FOLDS,
-            labels={"x": "", "y": "AUROC"},
-        )
+        fig_cv1 = px.bar(x=[f"Fold {i+1}" for i in range(5)], y=CV_AUROC_FOLDS, labels={"x": "", "y": "AUROC"})
         fig_cv1.update_traces(marker_color="#146C94")
-        fig_cv1.update_layout(
-            height=300,
-            yaxis_range=[0.85, 0.92],
-            margin=dict(l=20, r=20, t=30, b=20),
-            title=f"AUROC per Fold (mean {np.mean(CV_AUROC_FOLDS):.4f})",
-        )
+        fig_cv1.update_layout(height=300, yaxis_range=[0.85, 0.92], margin=dict(l=20, r=20, t=30, b=20),
+                               title=f"AUROC per Fold (mean {np.mean(CV_AUROC_FOLDS):.4f})")
         st.plotly_chart(fig_cv1, use_container_width=True)
     with c2:
-        fig_cv2 = px.bar(
-            x=[f"Fold {i + 1}" for i in range(5)],
-            y=CV_AUPRC_FOLDS,
-            labels={"x": "", "y": "AUPRC"},
-        )
+        fig_cv2 = px.bar(x=[f"Fold {i+1}" for i in range(5)], y=CV_AUPRC_FOLDS, labels={"x": "", "y": "AUPRC"})
         fig_cv2.update_traces(marker_color="#E4572E")
-        fig_cv2.update_layout(
-            height=300,
-            yaxis_range=[0.45, 0.60],
-            margin=dict(l=20, r=20, t=30, b=20),
-            title=f"AUPRC per Fold (mean {np.mean(CV_AUPRC_FOLDS):.4f})",
-        )
+        fig_cv2.update_layout(height=300, yaxis_range=[0.45, 0.60], margin=dict(l=20, r=20, t=30, b=20),
+                               title=f"AUPRC per Fold (mean {np.mean(CV_AUPRC_FOLDS):.4f})")
         st.plotly_chart(fig_cv2, use_container_width=True)
-    st.caption(
-        f"Std. dev: AUROC ±{np.std(CV_AUROC_FOLDS):.4f}, AUPRC ±{np.std(CV_AUPRC_FOLDS):.4f} — low variance confirms the result is stable, not a lucky split."
-    )
+    st.caption(f"Std. dev: AUROC ±{np.std(CV_AUROC_FOLDS):.4f}, AUPRC ±{np.std(CV_AUPRC_FOLDS):.4f} — low variance confirms the result is stable, not a lucky split.")
 
 # ===========================================================================
 # PAGE 5 — ALL MODELS COMPARISON (reference numbers, not live inference)
 # ===========================================================================
 elif page == "All Models Comparison":
     st.title("⚖️ All Models Comparison")
-    st.caption(
-        "Reference results from the training notebook — only XGBoost is deployed live in this app"
-    )
+    st.caption("Reference results from the training notebook — only XGBoost is deployed live in this app")
     st.divider()
 
-    st.warning(
-        "Logistic Regression and Random Forest were trained and evaluated during model selection, but their weights were not saved for deployment. The numbers below are reported from the training notebook for comparison only."
-    )
+    st.warning("Logistic Regression and Random Forest were trained and evaluated during model selection, but their weights were not saved for deployment. The numbers below are reported from the training notebook for comparison only.")
 
-    comp_df = (
-        pd.DataFrame(MODEL_METRICS).T.reset_index().rename(columns={"index": "Model"})
-    )
+    comp_df = pd.DataFrame(MODEL_METRICS).T.reset_index().rename(columns={"index": "Model"})
     fig = go.Figure()
-    fig.add_trace(
-        go.Bar(
-            name="AUROC", x=comp_df["Model"], y=comp_df["AUROC"], marker_color="#146C94"
-        )
-    )
-    fig.add_trace(
-        go.Bar(
-            name="AUPRC", x=comp_df["Model"], y=comp_df["AUPRC"], marker_color="#E4572E"
-        )
-    )
-    fig.update_layout(
-        barmode="group",
-        height=420,
-        yaxis_range=[0, 1],
-        margin=dict(l=20, r=20, t=20, b=20),
-    )
+    fig.add_trace(go.Bar(name="AUROC", x=comp_df["Model"], y=comp_df["AUROC"], marker_color="#146C94"))
+    fig.add_trace(go.Bar(name="AUPRC", x=comp_df["Model"], y=comp_df["AUPRC"], marker_color="#E4572E"))
+    fig.update_layout(barmode="group", height=420, yaxis_range=[0, 1], margin=dict(l=20, r=20, t=20, b=20))
     st.plotly_chart(fig, use_container_width=True)
 
-    st.dataframe(
-        comp_df.set_index("Model").style.format("{:.3f}"), use_container_width=True
-    )
-    st.caption(
-        "XGBoost wins on both metrics — especially AUPRC, which matters most given the 8.6% positive rate."
-    )
+    st.dataframe(comp_df.set_index("Model").style.format("{:.3f}"), use_container_width=True)
+    st.caption("XGBoost wins on both metrics — especially AUPRC, which matters most given the 8.6% positive rate.")
